@@ -1,6 +1,6 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+  <q-layout view="hHh lpR lFf">
+    <q-header :elevated="useLightOrDark(true, false)">
       <q-toolbar>
         <q-btn
           flat
@@ -12,30 +12,53 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          <div class="absolute-center">
+            <div class="toolbar-title-text">
+              <q-icon name="savings" />
+              MoneyBalls
+            </div>
+          </div>
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn
+          v-if="$route.fullPath === '/'"
+          @click="storeEntries.options.sort = !storeEntries.options.sort"
+          :label="!storeEntries.options.sort ? 'Sort' : 'Done'"
+          flat
+          no-caps
+          dense
+        />
       </q-toolbar>
     </q-header>
 
     <q-drawer
+      :width="250"
+      :breakpoint="767"
+      class="bg-primary"
       v-model="leftDrawerOpen"
       show-if-above
       bordered
     >
       <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
+        <q-item-label class="text-white" header> Navigation </q-item-label>
 
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
+        <NavLink v-for="link in navLinks" :key="link.title" v-bind="link" />
+
+        <q-item
+          v-if="$q.platform.is.electron"
+          @click="quitApp"
+          clickable
+          class="text-white absolute-bottom"
+          tag="a"
+        >
+          <q-item-section avatar>
+            <q-icon name="power_settings_new" />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Quit</q-item-label>
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-drawer>
 
@@ -46,57 +69,52 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+import { ref } from "vue";
+import { useQuasar } from "quasar";
+import { useStoreEntries } from "src/stores/storeEntries";
+import { useLightOrDark } from "src/use/useLightOrDark";
+import NavLink from "src/components/Nav/NavLink.vue";
 
-const linksList = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
-]
+const storeEntries = useStoreEntries(),
+  $q = useQuasar();
 
-const leftDrawerOpen = ref(false)
+const navLinks = [
+  {
+    title: "Entries",
+    icon: "savings",
+    link: "/",
+  },
+  {
+    title: "Settings",
+    icon: "settings",
+    link: "/settings",
+  },
+];
 
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+const leftDrawerOpen = ref(false);
+
+function toggleLeftDrawer() {
+  leftDrawerOpen.value = !leftDrawerOpen.value;
 }
+
+const quitApp = () => {
+  $q.dialog({
+    title: "Confirm",
+    message: "Really quit MoneyBalls?",
+    cancel: true,
+    persistent: true,
+    html: true,
+    ok: {
+      label: "Quit",
+      color: "negative",
+      noCaps: true,
+    },
+    cancel: {
+      color: "primary",
+      noCaps: true,
+    },
+  }).onOk(() => {
+    if ($q.platform.is.electron) ipcRenderer.send("quit-app");
+  });
+};
 </script>
