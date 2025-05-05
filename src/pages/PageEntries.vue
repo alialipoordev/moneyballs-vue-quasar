@@ -1,23 +1,29 @@
 <template>
   <q-page>
     <div class="q-pa-md">
-      <transition appear enter-active-class="animated jackInTheBox slower">
-        <NothingHere v-if="!storeEntries.entries.length" />
-      </transition>
+      <template v-if="storeEntries.entriesLoaded">
+        <transition appear enter-active-class="animated jackInTheBox slower">
+          <NothingHere v-if="!storeEntries.entriesOrdered.length" />
+        </transition>
 
-      <q-list v-if="storeEntries.entries.length" class="entries">
-        <Sortable
-          :list="storeEntries.entries"
-          item-key="id"
-          :options="{ handle: '.handle' }"
-          @end="storeEntries.sortEnd"
-          tag="div"
-        >
-          <template #item="{ element, index }">
-            <Entry :key="element.id" :entry="element" :index="index" />
-          </template>
-        </Sortable>
-      </q-list>
+        <q-list v-if="storeEntries.entriesOrdered.length" class="entries">
+          <Sortable
+            :list="storeEntries.entriesOrdered"
+            item-key="id"
+            :options="{ handle: '.handle' }"
+            @end="storeEntries.sortEnd"
+            tag="div"
+          >
+            <template #item="{ element, index }">
+              <Entry :key="element.id" :entry="element" :index="index" />
+            </template>
+          </Sortable>
+        </q-list>
+      </template>
+
+      <div v-else class="text-center q-pa-xl">
+        <q-spinner color="primary" size="3em" :thickness="10" />
+      </div>
     </div>
 
     <q-footer class="bg-transparent">
@@ -26,7 +32,7 @@
         enter-active-class="animated fadeInUp"
         leave-active-class="animated fadeOutDown"
       >
-        <Balance v-if="storeEntries.entries.length" />
+        <Balance v-if="storeEntries.entriesOrdered.length" />
       </transition>
       <AddEntry />
     </q-footer>

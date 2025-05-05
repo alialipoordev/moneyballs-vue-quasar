@@ -45,6 +45,25 @@
         <NavLink v-for="link in navLinks" :key="link.title" v-bind="link" />
 
         <q-item
+          v-if="storeAuth.isAuthenticated"
+          @click="logout"
+          clickable
+          tag="a"
+          class="text-white shadow-up-2"
+        >
+          <q-item-section avatar>
+            <q-icon name="logout" />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Logout</q-item-label>
+            <q-item-label class="text-caption text-weight-light">{{
+              storeAuth.user?.email
+            }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item
           v-if="$q.platform.is.electron"
           @click="quitApp"
           clickable
@@ -69,14 +88,19 @@
 </template>
 
 <script setup>
+import NavLink from "src/components/Nav/NavLink.vue";
 import { ref } from "vue";
 import { useQuasar } from "quasar";
+import { useRouter } from "vue-router";
 import { useStoreEntries } from "src/stores/storeEntries";
 import { useLightOrDark } from "src/use/useLightOrDark";
-import NavLink from "src/components/Nav/NavLink.vue";
+import { useAuthStore } from "src/stores/storeAuth";
+import { logoutUser } from "src/services/auth.service";
 
 const storeEntries = useStoreEntries(),
-  $q = useQuasar();
+  $q = useQuasar(),
+  router = useRouter(),
+  storeAuth = useAuthStore();
 
 const navLinks = [
   {
@@ -116,5 +140,15 @@ const quitApp = () => {
   }).onOk(() => {
     if ($q.platform.is.electron) ipcRenderer.send("quit-app");
   });
+};
+
+const logout = async () => {
+  try {
+    await logoutUser();
+    storeAuth.setUser(null);
+    router.push("/login");
+  } catch (error) {
+    console.error(error);
+  }
 };
 </script>
